@@ -1,0 +1,10 @@
+2026-01-06 09:15:02 ERROR Authentication failed: Invalid API key provided
+2026-01-06 09:18:45 ERROR FileSystemException: Permission denied at /var/www/uploads/
+2026-01-06 09:22:10 ERROR OutOfMemoryError: Java heap space exhausted
+2026-01-06 09:25:30 WARN High disk usage detected: 88% on volume /dev/sda1
+2026-01-06 09:30:12 WARN Deprecated method call: 'getUserDataV1' will be removed soon
+2026-01-06 09:35:55 WARN Latency spike: Database query took 1500ms
+2026-01-06 09:40:18 WARN Retrying connection to Message Queue (Attempt 2/5)
+2026-01-06 09:45:00 INFO System startup complete: Listening on port 8080
+2026-01-06 09:50:22 INFO User ID 4492 successfully updated profile settings
+2026-01-06 10:00:05 INFO Daily backup job initiated for 'customer_db'
