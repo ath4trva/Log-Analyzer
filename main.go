@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
+	"time"
 )
 
 type LogStats struct {
 	Counts     map[string]int
 	TotalLines int
 	Lines      []string
+	mu 	   sync.Mutex
 }
 
 func main() {
@@ -18,6 +21,7 @@ func main() {
 		fmt.Println("Usage: go run main.go <filename>")
 		return
 	}
+	start:= time.Now()
 
 	filename := os.Args[1]
 
@@ -32,6 +36,9 @@ func main() {
 	}
 
 	printSummary(stats)
+
+	duration:= time.Since(start)
+	fmt.Printf("Processing time: %v\n", duration)
 }
 
 func parseLogFile(path string) (LogStats, error) {
@@ -44,32 +51,53 @@ func parseLogFile(path string) (LogStats, error) {
 		Counts: make(map[string]int),
 	}
 
-	levels := []string{"INFO", "WARN", "ERROR"}
-	scanner := bufio.NewScanner(file)
+	lineChan:= make(chan string, 100)
+	var wg sync.WaitGroup
+	numWorkers:=4	
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
+	
 
-		s.TotalLines++
-		s.Lines = append(s.Lines, line)
-		match:= false
-		for _, level := range levels {
-			if strings.Contains(line, level) {
-				s.Counts[level]++
-				match = true
-				break
+	for i:=0; i<numWorkers; i++ {
+		wg.Add(1)
+		go func(){
+			defer wg.Done()
+			levels:=[]string{"INFO", "WARN", "ERROR"}
+			for line:= range lineChan {
+				match:=false
+				for _, level:= range levels{
+					if strings.Contains(line, level){
+						s.increment(level)
+						match = true
+						break
+				}
+			}
+
+			if !match{
+				s.increment("UNKNOWN")
 			}
 		}
-		if !match{
-			s.Counts["UNKNOWN"]++
-		}
+	}()
 	}
-
+	scanner:= bufio.NewScanner(file)
+	for scanner.Scan(){
+		line:= scanner.Text()
+		if strings.TrimSpace(line)==""{
+			continue
+		}
+		s.TotalLines++
+		s.Lines = append(s.Lines, line)
+		lineChan<-line
+	}
+	close(lineChan)
+	wg.Wait()
 	return s, scanner.Err()
+	
 }
+ func(s *LogStats) increment(level string){
+	s.mu.Lock()
+	s.Counts[level]++
+	s.mu.Unlock()
+ }
 
 func printSummary(s LogStats) {
 	fmt.Printf("\n--- LOG ANALYSIS COMPLETE ---\n")
