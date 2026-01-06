@@ -1,45 +1,46 @@
 # Concurrent Log Analyzer (Go)
 
-A CLI-based log analyzer written in Go that processes large log files efficiently using concurrency.
-It reads log files, identifies log levels, and produces a summarized analysis.
+A CLI-based log analyzer written in Go that efficiently processes large log files using concurrency.  
+The tool reads log files, detects log levels, and produces a summarized report.
 
-This project was built to deeply understand Go fundamentals such as file I/O, goroutines, channels, worker pools, mutexes, and synchronization.
+This project was built to strengthen understanding of Go fundamentals such as file I/O, goroutines, channels, worker pools, mutexes, and synchronization.
 
 ---
 
 ## Features
 
-- **High Performance:** Reads log files line by line (memory efficient).
-- **Concurrency:** Uses a worker pool to process lines in parallel.
-- **Log Level Detection:** Automatically categorizes:
-  - `INFO`
-  - `WARN`
-  - `ERROR`
-  - `UNKNOWN` (Catches any unrecognized logs)
-- **Thread Safety:** Uses `sync.Mutex` for safe data aggregation.
-- **Performance Metrics:** Measures and prints execution time.
+- Reads log files line by line
+- Detects log levels:
+  - INFO
+  - WARN
+  - ERROR
+  - UNKNOWN
+- Counts total number of log lines
+- Concurrent processing using a worker pool
+- Thread-safe aggregation of results
+- Clean CLI output
 
 ---
 
 ## Project Structure
 
-```text
 .
-├── main.go       # Source code
-├── log.txt       # Sample log file
-└── README.md     # Project documentation
+├── main.go
+├── app.log
+└── README.md
+
 
 ---
 
-## How It Works (High-Level)
+## How It Works
 
 1. The log file is read line by line using `bufio.Scanner`
-2. Each line is sent to a buffered channel
-3. Multiple worker goroutines consume lines concurrently
-4. Workers analyze log levels
+2. Each line is sent into a buffered channel
+3. Multiple worker goroutines consume log lines concurrently
+4. Workers detect log levels in each line
 5. Shared statistics are updated safely using a mutex
-6. A `sync.WaitGroup` ensures all workers finish before exit
-7. A summary report is printed
+6. A `sync.WaitGroup` ensures all workers complete before exiting
+7. A summary of log statistics is printed
 
 ---
 
@@ -49,31 +50,20 @@ This project was built to deeply understand Go fundamentals such as file I/O, go
 
 ```bash
 go run main.go <logfile>
-
-## Sample Output
+$ go run main.go log.txt
 
 2026-01-06 09:15:02 ERROR Authentication failed: Invalid API key provided
 2026-01-06 09:18:45 ERROR FileSystemException: Permission denied at /var/www/uploads/
-2026-01-06 09:22:10 ERROR OutOfMemoryError: Java heap space exhausted
 2026-01-06 09:25:30 WARN High disk usage detected: 88% on volume /dev/sda1
-2026-01-06 09:30:12 WARN Deprecated method call: 'getUserDataV1' will be removed soon
-2026-01-06 09:35:55 WARN Latency spike: Database query took 1500ms
-2026-01-06 09:40:18 WARN Retrying connection to Message Queue (Attempt 2/5)
-2026-01-06 09:45:00 INFO System startup complete: Listening on port 8080
-2026-01-06 09:50:22 INFO User ID 4492 successfully updated profile settings
-2026-01-06 10:00:05 INFO Daily backup job initiated for 'customer_db'
-2026-01-06 10:15:22 DEBUG Initializing internal cache...
-2026-01-06 10:20:45 TRACE Packet received from 192.168.1.1
-2026-01-06 10:22:10 SYSTEM Kernel update initiated
+...
 2026-01-06 10:25:00 CRITICAL Temperature threshold exceeded!
 2026-01-06 10:30:12 PANIC Segment fault at address 0x0045f
 
 --- LOG ANALYSIS COMPLETE ---
 Total processed: 15
 INFO  messages:   3
-UNKNOWN messages:   5
-ERROR messages:   3
 WARN  messages:   4
+ERROR messages:   3
+UNKNOWN messages: 5
 -----------------------------
-Processing time: 2.1055ms
-
+⚡ Execution Time: 2.1055ms
