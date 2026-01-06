@@ -8,10 +8,8 @@ import (
 )
 
 type LogStats struct {
+	Counts     map[string]int
 	TotalLines int
-	InfoCount  int
-	WarnCount  int
-	ErrorCount int
 	Lines      []string
 }
 
@@ -42,25 +40,31 @@ func parseLogFile(path string) (LogStats, error) {
 		return LogStats{}, err
 	}
 	defer file.Close()
+	s := LogStats{
+		Counts: make(map[string]int),
+	}
 
-	var s LogStats
+	levels := []string{"INFO", "WARN", "ERROR"}
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line == "" {
+		if strings.TrimSpace(line) == "" {
 			continue
 		}
 
 		s.TotalLines++
 		s.Lines = append(s.Lines, line)
-
-		if strings.Contains(line, "INFO") {
-			s.InfoCount++
-		} else if strings.Contains(line, "WARN") {
-			s.WarnCount++
-		} else if strings.Contains(line, "ERROR") {
-			s.ErrorCount++
+		match:= false
+		for _, level := range levels {
+			if strings.Contains(line, level) {
+				s.Counts[level]++
+				match = true
+				break
+			}
+		}
+		if !match{
+			s.Counts["UNKNOWN"]++
 		}
 	}
 
@@ -70,8 +74,9 @@ func parseLogFile(path string) (LogStats, error) {
 func printSummary(s LogStats) {
 	fmt.Printf("\n--- LOG ANALYSIS COMPLETE ---\n")
 	fmt.Printf("Total processed: %d\n", s.TotalLines)
-	fmt.Printf("INFO messages:   %d\n", s.InfoCount)
-	fmt.Printf("WARN messages:   %d\n", s.WarnCount)
-	fmt.Printf("ERROR messages:  %d\n", s.ErrorCount)
+
+	for level, count := range s.Counts {
+		fmt.Printf("%-5s messages:   %d\n", level, count)
+	}
 	fmt.Println("-----------------------------")
 }
