@@ -1,6 +1,6 @@
 # Concurrent Log Analyzer (Go)
 
-A CLI-based log analyzer written in Go that processes large log files efficiently using concurrency.  
+A CLI-based log analyzer written in Go that processes large log files efficiently using concurrency.
 It reads log files, identifies log levels, and produces a summarized analysis.
 
 This project was built to deeply understand Go fundamentals such as file I/O, goroutines, channels, worker pools, mutexes, and synchronization.
@@ -9,25 +9,25 @@ This project was built to deeply understand Go fundamentals such as file I/O, go
 
 ## Features
 
-- Reads log files line by line
-- Detects log levels:
-  - INFO
-  - WARN
-  - ERROR
-  - UNKNOWN
-- Counts total log lines
-- Concurrent processing using a worker pool
-- Thread-safe aggregation of results
-- Clean and readable CLI output
+- **High Performance:** Reads log files line by line (memory efficient).
+- **Concurrency:** Uses a worker pool to process lines in parallel.
+- **Log Level Detection:** Automatically categorizes:
+  - `INFO`
+  - `WARN`
+  - `ERROR`
+  - `UNKNOWN` (Catches any unrecognized logs)
+- **Thread Safety:** Uses `sync.Mutex` for safe data aggregation.
+- **Performance Metrics:** Measures and prints execution time.
 
 ---
 
 ## Project Structure
-.
-├── main.go
-├── log.txt
-└── README.md
 
+```text
+.
+├── main.go       # Source code
+├── log.txt       # Sample log file
+└── README.md     # Project documentation
 
 ---
 
