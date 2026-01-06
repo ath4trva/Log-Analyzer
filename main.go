@@ -7,51 +7,71 @@ import (
 	"strings"
 )
 
+type LogStats struct {
+	TotalLines int
+	InfoCount  int
+	WarnCount  int
+	ErrorCount int
+	Lines      []string
+}
+
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("ERROR = Enter the command in this format - run main.go <filename>")
+		fmt.Println("Usage: go run main.go <filename>")
+		return
 	}
 
 	filename := os.Args[1]
-	file, err := os.Open(filename)
+
+	stats, err := parseLogFile(filename)
 	if err != nil {
-		fmt.Printf("Error in OPENING the file %v\n", err)
+		fmt.Printf("Error: %v\n", err)
+		return
 	}
 
-	defer file.Close()
-	var logs []string
-	lineCount := 0
-	INFO := 0
-	Warn := 0
-	Error := 0
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lineCount++
-		line := scanner.Text()
-		if line != "" {
-			logs = append(logs, line)
-			if strings.Contains(line, "INFO") {
-				INFO++
-			} else if strings.Contains(line, "WARN") {
-				Warn++
-			} else if strings.Contains(line, "ERROR") {
-				Error++
-			} else {
-				// Do nothing for unrecognized log levels
-			}
-
-		}
-
+	for _, line := range stats.Lines {
+		fmt.Println(line)
 	}
-	for _, Log := range logs {
-		fmt.Println(Log)
-	}
-	fmt.Printf("\n--- Done! Total lines: %d ---\n", lineCount)
 
-	fmt.Printf("INFO: %d\n Warn: %d\n Error: %d\n", INFO, Warn, Error)
+	printSummary(stats)
 }
 
-func processLine(line string, INFO *int, Warn *int, Error *int) {
-	
+func parseLogFile(path string) (LogStats, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return LogStats{}, err
+	}
+	defer file.Close()
+
+	var s LogStats
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			continue
+		}
+
+		s.TotalLines++
+		s.Lines = append(s.Lines, line)
+
+		if strings.Contains(line, "INFO") {
+			s.InfoCount++
+		} else if strings.Contains(line, "WARN") {
+			s.WarnCount++
+		} else if strings.Contains(line, "ERROR") {
+			s.ErrorCount++
+		}
+	}
+
+	return s, scanner.Err()
+}
+
+func printSummary(s LogStats) {
+	fmt.Printf("\n--- LOG ANALYSIS COMPLETE ---\n")
+	fmt.Printf("Total processed: %d\n", s.TotalLines)
+	fmt.Printf("INFO messages:   %d\n", s.InfoCount)
+	fmt.Printf("WARN messages:   %d\n", s.WarnCount)
+	fmt.Printf("ERROR messages:  %d\n", s.ErrorCount)
+	fmt.Println("-----------------------------")
 }
